@@ -1,0 +1,195 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=Utf-8">
+<title>blockchain example</title>
+<script type="text/javascript" src="md5.js"></script>
+
+<style>
+    #div-1 {
+    }
+    
+    .block-ok {
+	    width: 400px;
+		border: 2px solid;
+	    border-radius: 15px;
+	    background: #00FF99;
+		margin: 20px;
+		padding: 15px;
+    }
+
+    .block-ko {
+	    width: 400px;
+		border: 2px solid;
+	    border-radius: 15px;
+	    background: #FF6600;
+		margin: 20px;
+		padding: 15px;
+    }
+	
+</style>
+
+<script type="text/javascript">
+
+var index = 1;
+
+function updateNextHashValue(id, result){
+	// ...if exists
+	var obj = document.getElementById('prevhash'+(id+1));
+	if ( obj != null){
+	  obj.value = result;
+	  // trigger the change event
+	  obj.dispatchEvent(new Event('input', {}));
+	}
+}
+
+function hashMe(id) {
+	var text = document.getElementById('nonce'+id).value.
+		replace(/^[\s\u3000]+|[\s\u3000]+$/g, '');
+	text += document.getElementById('data'+id).value.
+		replace(/^[\s\u3000]+|[\s\u3000]+$/g, '');
+	text += document.getElementById('prevhash'+id).value.
+		replace(/^[\s\u3000]+|[\s\u3000]+$/g, '');
+    var result = MD5(text);
+	//alert(result);
+	document.getElementById('hash'+id).value = result;
+    
+	// check if result begins with 0000
+	if (result.startsWith("0000")){
+	   document.getElementById('block'+id).className = 'block-ok';
+	}
+	else {
+	   document.getElementById('block'+id).className = 'block-ko';
+	}
+	
+	// copy hash also to the next block...if exists
+	updateNextHashValue(id, result);
+
+};
+
+function findNounce(id) {
+   // find Nounce that will result in a signed hash (starting with 0000
+   //var searching = true;
+   var nouncer = 0;
+   
+   while (true) {
+
+ 	var text = nouncer;
+ 	text += document.getElementById('data'+id).value.
+ 		replace(/^[\s\u3000]+|[\s\u3000]+$/g, '');
+ 	text += document.getElementById('prevhash'+id).value.
+ 		replace(/^[\s\u3000]+|[\s\u3000]+$/g, '');
+    var result = MD5(text);
+    
+	if (nouncer < 0){
+	  document.getElementById('nonce'+id).value = "***not found***";
+	  break;
+	}
+	else if (result.startsWith("0000") ){
+	  document.getElementById('nonce'+id).value = nouncer;
+  	  document.getElementById('hash'+id).value = result;
+	  updateNextHashValue(id, result);
+	  document.getElementById('block'+id).className = 'block-ok';
+	  break;
+	}
+	else {nouncer += 1;}
+   }
+}
+
+function createBlock(id) {
+   var iDiv = document.createElement('div');
+   iDiv.id = 'block'+id;
+   iDiv.className = 'block-ko';
+   document.getElementsByTagName('body')[0].appendChild(iDiv);
+   
+   // Nonce
+   var obj1 = document.createElement('label');
+   obj1.innerText = "Nonce";
+   obj1.setAttribute("for","nonce");   
+   iDiv.appendChild(obj1);
+   
+   obj1 = document.createElement('input');
+   obj1.id = "nonce"+id;
+   obj1.name = "nonce"+id;
+   obj1.setAttribute("type", "text");
+   obj1.oninput = function() {hashMe(id);}
+   iDiv.appendChild(obj1);   
+   
+   obj1 = document.createElement('input');
+   obj1.id = "button"+id;
+   obj1.value = "Mine(find Nounce)";
+   obj1.setAttribute("type", "button");
+   obj1.onclick = function() {findNounce(id);}  
+   iDiv.appendChild(obj1);   
+   
+   // Data
+   iDiv.appendChild(document.createElement("br")); // newline
+   
+   obj1 = document.createElement('label');
+   obj1.innerText = "Data";
+   obj1.setAttribute("for","data");   
+   iDiv.appendChild(obj1);
+   
+   obj1 = document.createElement('textarea');
+   obj1.id = "data"+id;
+   obj1.name = "data"+id;
+   obj1.rows = "8";
+   obj1.cols = "50";
+   obj1.oninput = function() {hashMe(id);}
+   iDiv.appendChild(obj1);   
+   
+   // Previous Hash
+   iDiv.appendChild(document.createElement("br")); // newline
+   
+   obj1 = document.createElement('label');
+   obj1.innerText = "Previous Hash";
+   obj1.setAttribute("for","prevhash");   
+   iDiv.appendChild(obj1);
+   
+   obj1 = document.createElement('input');
+   obj1.id = "prevhash"+id;
+   obj1.name = "prevhash"+id;
+   obj1.setAttribute("type", "text");
+   if (id>1) {obj1.value = document.getElementById('hash'+(id-1)).value;}
+   obj1.size = "50";
+   obj1.oninput = function() {hashMe(id);}
+   iDiv.appendChild(obj1);   
+   
+   // Hash
+   iDiv.appendChild(document.createElement("br")); // newline
+   
+   obj1 = document.createElement('label');
+   obj1.innerText = "Hash";
+   obj1.setAttribute("for","hash");   
+   iDiv.appendChild(obj1);
+   
+   obj1 = document.createElement('input');
+   obj1.id = "hash"+id;
+   obj1.name = "hash"+id;
+   obj1.setAttribute("type", "text");
+   obj1.size = "50";
+   iDiv.appendChild(obj1);   
+
+   // global
+   index += 1;
+}
+
+</script>
+
+</head>
+<body>
+
+<h1>Blockchain Demo Example</h1>
+<h2>using MD5 hash</h2>
+<input type="button" value="ADD BLOCK" onclick="createBlock(index)"/>
+
+
+<script type="text/javascript">
+  //alert('coucou')
+  //createBlock(1);
+  //createBlock(2);
+  //createBlock(3);
+</script>
+
+  
+</body>
+</html>
